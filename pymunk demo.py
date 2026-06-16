@@ -10,6 +10,8 @@ import pymunk
 from PhysicsHandler import *
 from debug_drawer import debugscreen
 from Player import *
+import numpy as np
+import Grid
 
 #%%initialize
 pygame.init()
@@ -39,6 +41,7 @@ debug_size  = (2*screenx/12, 2*screeny/3)
 debug = debugscreen(debug_loc,debug_size)
 
 
+
 img = [
 
     "       ",
@@ -56,22 +59,70 @@ img = [
     "       ",
 ]
 
+Jump_allowed = True
+def on_ground(arbiter : pymunk.Arbiter, space, data):
+    #print(arbiter.normal)
+    global Jump_allowed
+    if arbiter.normal > (0,0):
+        Jump_allowed = True
 
+
+
+handler = space.on_collision(1,2,post_solve=on_ground)
+
+
+def Player_controller(key, body : pymunk.Body, type):
+        """Prototype"""
+        global Jump_allowed
+        
+        if key == pygame.K_RIGHT:
+            body.velocity += (200,0)
+        elif key == pygame.K_LEFT: 
+            body.velocity += (-200,0)
+        elif key == pygame.K_SPACE and Jump_allowed:
+            body.velocity += (0,-500) 
+     
+            print('jumping')
+            Jump_allowed = False
+        if (key == pygame.K_LEFT or key == pygame.K_RIGHT) and type:
+            print(key)
+            body.velocity = (0,body.velocity.y) 
+
+
+pilaar_img = pygame.image.load("textures\pilaar.png")
+doos_img = pygame.image.load("textures\doos.png")
+
+#alpha_array = pygame.surfarray.pixels_alpha(pilaar_img)
+
+#np.savetxt("alpha_values.csv", alpha_array, fmt="%d", delimiter=",")
 #%% Game loop
+
+def grid2obj(map):
+    for x in range(map.statics.get_width()):
+        for y in range(map.statics.get_height()):
+            data = map.statics.get_at((x,y))
+            if data == (255,255,255):
+                floor = Object((x*32,y*32),10,body_type=pymunk.Body.STATIC)
+                floor.add_shape(pymunk.Poly(floor.body,[(0,0),(32,0),(0,32),(0,32)]),2)
+
+
+
 def main():
     running = True
     PhysicsManager = Manager()
 
-    ball = Object(center, 10)
-    ball.add_shape(pymunk.Circle(ball.body,10))
+    ball = Object(center, 80)
+    ball.add_shape(pymunk.Circle(ball.body,10), 1)
 
-    floor = Object((0,cy+200),10,body_type=pymunk.Body.STATIC)
-    floor.add_shape(pymunk.Segment(floor.body, (0,0),(screenx,0),10))
+    map = Grid.grid()
+    map.load_layer()
+    grid2obj(map)
 
-    shape1 = Object((cx+100,cy), 10)
-    shape1.autogeometry(img)
+
 
     cam = camera(ball,PhysicsManager,center)
+
+    PlayerSm = Player()
 
     while running: 
         PhysicsManager.add_objects(space)
@@ -79,10 +130,9 @@ def main():
         #Get mouse information 
         mouse_pos = pygame.mouse.get_pos() #Get mouse position
         keys = pygame.key.get_pressed()
-
+        
         debug.set_text('fps',clock.get_fps())
         debug.set_text('mouse pos', mouse_pos)
-
 
         
         #%%
@@ -91,7 +141,13 @@ def main():
                 running = False
                 # Quit Pygame
                 pygame.quit()
-    
+            if event.type == pygame.KEYDOWN: 
+
+                Player_controller(event.key, ball.body, 0)
+            if event.type == pygame.KEYUP:
+                Player_controller(event.key, ball.body, 1) #the player should stop moving left or right when a key is released, but not when jumping
+                print('test')
+
 
         screen.fill((255,255,255))
         PhysicsManager.debug_draw(screen,space)
