@@ -38,6 +38,7 @@ class PhysicsBody():
         2. Translation
         3. Rotation"""
         self.body = pymunk.Body(body_type=body_type)
+
         self.body.position = location
         self.radius = 1
         Pymunk_queue.append(self.body)
@@ -54,7 +55,7 @@ class PhysicsBody():
         return self.body.local_to_world(self.body.center_of_gravity)
 
 
-class Object(PhysicsBody):
+class Object(PhysicsBody, pygame.sprite.Sprite):
     def __init__(self, location : tuple, mass : int, body_type = pymunk.Body.DYNAMIC):
         """An object is a specialized form of a pymunk body. it inherits from PhysicsBody.
         Its responsible for
@@ -65,8 +66,9 @@ class Object(PhysicsBody):
         2. The texture attached to this shape"""
         super().__init__(location,body_type)
         self.shape = None
-        self.scale = 32
         self.mass = mass
+        self.scale = 32
+        
 
 
     def autogeometry(self, img):
@@ -75,9 +77,9 @@ class Object(PhysicsBody):
             for i in range(len(poly_line) - 1):
                 a = poly_line[i]
                 b = poly_line[i + 1]
-                shape = pymunk.Segment(self.body, a*self.scale, b*self.scale, self.radius)
-                shape.mass = self.mass
-                Pymunk_queue.append(shape)
+                self.shape = pymunk.Segment(self.body, a*self.scale, b*self.scale, self.radius)
+                self.shape.mass = self.mass
+                Pymunk_queue.append(self.shape)
 
     def from_image(self, img : pygame.surface, collision_type = 2):
 
@@ -100,11 +102,13 @@ class Object(PhysicsBody):
 
                 
 
-    def add_shape(self,shape : pymunk.Shape, collision_type : int):
-        shape = shape
-        shape.collision_type = collision_type
-        shape.mass = self.mass
-        Pymunk_queue.append(shape)
+    def add_shape(self,shape : pymunk.Shape, collision_type : int, mass):
+        self.shape = shape
+        self.shape.friction = 0.1
+        self.shape.elasticity = 0
+        self.shape.collision_type = collision_type
+        self.shape.mass = mass
+        Pymunk_queue.append(self.shape)
 
 
     def add_shape_list(self, list : list):
@@ -155,3 +159,4 @@ class camera:
         self.current = object.get_cog()                   #get a new current position
         self.dxy = self.location - self.current             #calculate the changed position to the set position
         self.manager.Translate_all(space,self.dxy)
+
