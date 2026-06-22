@@ -76,17 +76,17 @@ def Player_controller(key, body : pymunk.Body, type):
         global Jump_allowed
         
         if key == pygame.K_RIGHT:
-            body.velocity += (200,0)
+            body.velocity = (200,body.velocity.y)
         elif key == pygame.K_LEFT: 
-            body.velocity += (-200,0)
+            body.velocity = (-200,body.velocity.y)
         elif key == pygame.K_SPACE and Jump_allowed:
-            body.velocity += (0,-500) 
+            body.velocity = (body.velocity.x,-500) 
      
             print('jumping')
             Jump_allowed = False
         if (key == pygame.K_LEFT or key == pygame.K_RIGHT) and type:
             print(key)
-            body.velocity = (0,body.velocity.y) 
+            body.velocity = (body.velocity.x,body.velocity.y) 
 
 
 pilaar_img = pygame.image.load("textures\pilaar.png")
@@ -118,14 +118,14 @@ def main():
     ball = Object((screenx/2,-screeny), 80)
     ball.add_shape(pymunk.Circle(ball.body,10), 1,80)
 
-    sirius_torso = Object((screenx/2,-screeny+1200),80,body_type=pymunk.Body.KINEMATIC)
+    #sirius_torso = Object((screenx/2,-screeny+1200),80,body_type=pymunk.Body.DYNAMIC)
     #sirius_head = Object((screenx/2,-screeny+90),80)
     #shape for sirius 
     #head as a circle #radius 8 #location 16,16
     
-    sirius_torso.add_shape(pymunk.Poly(sirius_torso.body,[(0,0),(32,0),(16,32),(16,32)],radius=10),1,10)
+    #sirius_torso.add_shape(pymunk.Poly(sirius_torso.body,[(0,0),(32,0),(16,32),(16,32)],radius=10),1,10)
     #sirius_torso.add_shape(pymunk.Segment(sirius_torso.body,(8,32),(24,32),3),1,10)
-    sirius_torso.add_shape(pymunk.Circle(sirius_torso.body,8,(16,-16)),1,10)
+    #sirius_torso.add_shape(pymunk.Circle(sirius_torso.body,8,(16,-16)),1,10)
     #sirius_torso.body.moment = pymunk.inf
     #j = pymunk.PinJoint(sirius_head.body,sirius_torso.body,(16,-16),(16,0))
     #j.distance = 16
@@ -143,7 +143,7 @@ def main():
 
 
 
-    cam = camera(sirius_torso,PhysicsManager,center)
+    cam = camera(ball,PhysicsManager,center)
 
     PlayerSm = Player()
 
@@ -166,15 +166,15 @@ def main():
                 pygame.quit()
             if event.type == pygame.KEYDOWN: 
 
-                Player_controller(event.key, sirius_torso.body, 0)
+                Player_controller(event.key, ball.body, 0)
             if event.type == pygame.KEYUP:
-                Player_controller(event.key, sirius_torso.body, 1) #the player should stop moving left or right when a key is released, but not when jumping
+                Player_controller(event.key, ball.body, 1) #the player should stop moving left or right when a key is released, but not when jumping
                 print('test')
 
 
         screen.fill((255,255,255))
         PhysicsManager.debug_draw(screen,space)
-        cam.update(sirius_torso, space)
+        cam.update(ball, space)
         #PhysicsManager.Translate(space,(1,0))
 
         for obj in Object_list:

@@ -5,6 +5,10 @@ import json
 from pygame import Vector2
 from pygame import Surface
 from pygame import image
+from SceneManager import *
+import SceneManager
+from pymunk import Poly
+from pymunk import Body
 
 #bunch_of_colours
 green = (100, 150, 100) 
@@ -32,7 +36,24 @@ class grid():
         image.save(self.statics,'statics.png')
     
     def load_layer(self):
-        self.statics = image.load('statics.png')
+        self.statics = image.load('statics.png',)
+        print('Loading')
+
+    def to_obj(self):
+        print('test')
+        for x in range(self.statics.get_width()):
+            for y in range(self.statics.get_height()):
+                
+                data = self.statics.get_at((x,y))
+                if data == (255,255,255,255):
+                    floor = Object(body_type=Body.STATIC)
+                    floor.body.position = x*32,y*32
+                    floor.add_shape(Poly(floor.body,[(0,0),(32,0),(32,32),(0,32)]),10,2)
+                if data == (255,00,00,255):
+                    obj = Object(body_type=Body.DYNAMIC)
+                    obj.body.position = x*32,y*32
+                    obj.add_shape(Poly(obj.body,[(0,0),(32,0),(32,32),(0,32)]),10,2)
+                    obj.shape.friction = 0.9
 
     def world2screen(self):
         pass
@@ -44,10 +65,7 @@ class grid():
 if __name__ == "__main__":
     map = grid()
     map.load_layer()
-    for x in range(map.statics.get_width()):
-        for y in range(map.statics.get_height()):
-            data = map.statics.get_at((x,y))
-            print(data)
+    map.to_obj()
 
     
     #print (map.data[1])
